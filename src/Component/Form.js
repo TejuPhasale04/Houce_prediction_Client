@@ -25,7 +25,7 @@ function Form() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("https://housepriceprediction-e6uf.onrender.com/predict", {
+    const response = await fetch("https://housepriceprediction-t77w.onrender.com/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData)
