@@ -17,6 +17,7 @@ function Form() {
   });
 
   const [predictedPrice, setPredictedPrice] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,25 +25,38 @@ function Form() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setPredictedPrice(null);
 
-    const response = await fetch("https://housepriceprediction-t77w.onrender.com/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const response = await fetch("https://housepriceprediction-t77w.onrender.com/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
 
-    const data = await response.json();
-    setPredictedPrice(data.predicted_price);
+      if (!response.ok) {
+        throw new Error("Prediction failed");
+      }
+
+      const data = await response.json();
+      setPredictedPrice(data.predicted_price);
+    } catch (error) {
+      console.error("Error:", error);
+      setPredictedPrice("Something went wrong. Try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="form">
+    <div className="form" style={{ maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h1>🏠 House Price Prediction</h1>
       <form onSubmit={handleSubmit}>
-        <label>Area (sq ft): <input type="number" name="area" value={formData.area} onChange={handleChange} /></label><br />
-        <label>Bedrooms: <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} /></label><br />
-        <label>Bathrooms: <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} /></label><br />
-        <label>Stories: <input type="number" name="stories" value={formData.stories} onChange={handleChange} /></label><br />
+        <label>Area (sq ft): <input type="number" name="area" value={formData.area} onChange={handleChange} required /></label><br />
+        <label>Bedrooms: <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} required /></label><br />
+        <label>Bathrooms: <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} required /></label><br />
+        <label>Stories: <input type="number" name="stories" value={formData.stories} onChange={handleChange} required /></label><br />
         <label>Main Road:
           <select name="mainroad" value={formData.mainroad} onChange={handleChange}>
             <option value="yes">Yes</option><option value="no">No</option>
@@ -68,7 +82,7 @@ function Form() {
             <option value="yes">Yes</option><option value="no">No</option>
           </select>
         </label><br />
-        <label>Parking: <input type="number" name="parking" value={formData.parking} onChange={handleChange} /></label><br />
+        <label>Parking: <input type="number" name="parking" value={formData.parking} onChange={handleChange} required /></label><br />
         <label>Preferred Area:
           <select name="prefarea" value={formData.prefarea} onChange={handleChange}>
             <option value="yes">Yes</option><option value="no">No</option>
@@ -85,8 +99,10 @@ function Form() {
         <button type="submit">Predict Price</button>
       </form>
 
-      {predictedPrice && (
-        <h2>💰 Estimated Price: ₹ {parseInt(predictedPrice).toLocaleString()}</h2>
+      {loading && <p>⏳ Predicting...</p>}
+
+      {predictedPrice && !loading && (
+        <h2>💰 Estimated Price: {isNaN(predictedPrice) ? predictedPrice : `₹ ${parseInt(predictedPrice).toLocaleString()}`}</h2>
       )}
     </div>
   );
